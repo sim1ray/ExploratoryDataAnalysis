@@ -6,10 +6,13 @@ output:
     toc: true
 fontsize: 14pt
 ---
+  <!-- This is just the options for setup. Leave them be.-->
   
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+<!-- This starts the actual text of the document. Feel free to add text/code here. -->
   
 # Exploratory data analysis -- Honey production in the US from 1998-2012
 
@@ -251,7 +254,7 @@ points(testData,col="red")
 
 
 ```{r}
-# Conclusion: the model does reasonably fit the new test data, using the 90% confidence interval. With the exception of one of the data points, all the new data points do lie within the predicted intervals and follow the same linear relationsip. 
+# Conclusion: the model seems to reasonably fit the new test data, using the 90% confidence interval. With the exception of one of the data points, all the new data points do lie within the predicted intervals and follow the same linear relationsip. However it is important to note that just because the points lie within the prediction interval, that does not necesarily mean the model itself is accurate. Since the sample size is small, the prediction intervals are very wide and thus containment in the interval is meaningless for the model's accuracy.
 ```
 
 
