@@ -1,0 +1,267 @@
+---
+title: "Exploratory Data Analysis"
+author: "SIMONE RAY"
+output:   
+  html_document:
+    toc: true
+fontsize: 14pt
+---
+  <!-- This is just the options for setup. Leave them be.-->
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- This starts the actual text of the document. Feel free to add text/code here. -->
+  
+# Exploratory data analysis -- Honey production in the US from 1998-2012
+
+Dataset can be found at https://www.kaggle.com/jessicali9530/honey-production 
+
+Questions to consider:
+
+1. How has honey production yield changed from 1998 to 2012?
+
+2. Over time, which states produce the most honey? Which produce the least? Which have experienced the most change in honey yield?
+
+3. Does the data show any trends in terms of the number of honey producing colonies and yield per colony before vs. after 2006, which was when concern over Colony Collapse Disorder spread nationwide?
+
+4. Are there any patterns that can be observed between total honey production and value of production over this time period?
+
+5. How has value of production, which in some sense could be tied to demand, changed over this time period?
+
+```{r, echo=FALSE, message=FALSE}
+honeyproduction <- read.csv("~/Downloads/honeyproduction.csv")
+cat("SUMMARY OF DATA\n")
+summary(honeyproduction)
+
+# install.packages("dplyr")
+# install.packages("ggplot2")
+library(ggplot2)
+library(dplyr)
+
+cat("ANALYSIS OF TRENDS IN TOTAL PRODUCTION AND PRODUCTION VALUE", fill = TRUE)
+Total <- honeyproduction %>% group_by(year) %>% summarise(TotalProd = sum(totalprod))
+ggplot2 :: ggplot(Total,aes(x=year,y=TotalProd))+geom_point(color='#2980B9',size=4)+geom_smooth(method=lm,se=TRUE, color='#2C3E50')+labs(x = "YEAR", y = "Total Honey Production", title = "OVERALL HONEY PRODUCTION FROM 1998 to 2012")
+cat("In the above graph we can see that from 1998 to 2012, the overall amount of honey production across the United States has declined.")
+
+cat("Now let's look at price per lb.")
+Price_per_lb <- honeyproduction %>% group_by(year) %>% summarise(Price = mean(priceperlb))
+ggplot2 :: ggplot(Price_per_lb,aes(x=year,y=Price))+geom_point(color='purple',size=2)+geom_line(color='#2C3E50')+labs(x = "YEAR", y = "Average price per pound(dollars)", title = "AVERAGE PRICE PER POUND FROM 1998 to 2012")
+cat("The price per pound has shot up significantly since 1998.")
+
+cat("Now let's analyze value of production.")
+Value_of_production <- honeyproduction %>% group_by(year) %>% summarise(ProdValue = sum(prodvalue))
+ggplot2 :: ggplot(Value_of_production,aes(x=year,y=ProdValue))+geom_point(color='red',size=4)+geom_smooth(method=lm,se=TRUE, color='#2C3E50')+labs(x = "YEAR", y = "Value of Honey Production", title = "OVERALL PRODUCTION VALUE FROM 1998 to 2012")
+cat("The value of production shows the reverse trend as that seen for honey production. This makes sense as value of production = total production * price per lb. With a decline in honey production and consistent demand, the prices have gone up (as we saw above), leading to a higher value of production over time.")
+
+
+cat("The following graph depicts the trends in total production and value of production in the same plot.")
+p <- ggplot2 :: ggplot() +labs(x = "YEAR", y = "", title = "OVERLAY: TOTAL PRODUCTION AND PRODUCTION VALUE")+
+# blue plot
+geom_point(data=Total, aes(x=year, y=TotalProd, color="TotalProd")) + geom_line()+geom_smooth(data=Total, aes(x=year, y=TotalProd), fill="blue",colour="darkblue", size=1) +
+# red plot
+geom_point(data=Value_of_production, aes(x=year, y=ProdValue, colour="ProdValue")) + geom_line()+geom_smooth(data=Value_of_production, aes(x=year, y=ProdValue), fill="red",colour="red", size=1) + scale_colour_manual("", breaks = c("TotalProd", "ProdValue"), values = c("red", "darkblue"))
+suppressMessages(print(p))
+cat("Clearly, value of production has gone up, and overall production has gone down. This means that honey is slowly getting rarer and more expensive in the United States.")
+
+
+cat("2006: COLONY COLLAPSE ANALYSIS")
+cat("Examining number of honeybee colonies before 2006 and after 2006.")
+Number_of_Colonies <- honeyproduction %>% group_by(year) %>% summarise(NumCol = sum(numcol))
+ggplot2 :: ggplot(Number_of_Colonies, aes(x=year, y=NumCol))+geom_point(color='blue', size=3)+geom_line()+geom_vline(xintercept = 2006, linetype= 'dotted', color = 'purple')+labs(x= "YEAR", y="Number of Colonies", title = "NUMBER OF HONEYBEE COLONIES from 1998 to 2012")
+
+cat("Examining yield per colony before 2006 and after 2006.")
+Yield_per_colony <- honeyproduction %>% group_by(year) %>% summarise(Yield = mean(yieldpercol))
+ggplot2 :: ggplot(Yield_per_colony, aes(x=year, y=Yield))+geom_point(color='blue', size=3)+geom_line()+geom_vline(xintercept = 2006, linetype= 'dotted', color = 'purple')+labs(x= "YEAR", y="Average yield from colonies (pounds)", title = "AVERAGE YIELD PER COLONY from 1998 to 2012")
+
+cat("2006 was the year when Colony Collapse Disorder spread nationwide. From our two graphs, we can see the number of colonies did generally show a downward trend, going significantly low right before and after 2006. In 2008, it hit an all-time low (during time period of 1998 to 2012) but interestingly, shot up to an all-time high in 2010. This may be due to an interest in reviving the number of colonies following the nationwide concern in 2006.")
+cat("The average yield per colony went steadily down from 2006. In 2009, it went down by a huge amount. Again this would explain why in 2010, the number of colonies went up: due to concern over low yield, there must have been an urgent attempt at reviving the number of colonies. After 2009, the average yield went up slightly but still remained relatively low. The overall trend from 1998 to 2012 shows a decrease in average yield.")
+
+cat("NOW EXAMINING HONEY PRODUCTION IN EACH STATE:")
+Total_by_state = honeyproduction %>% group_by(state) %>% summarise(StateProd = sum(totalprod)) %>% arrange(desc(StateProd)) 
+ggplot(Total_by_state,aes(x=reorder(state,StateProd),y=StateProd))+geom_point(color='#2980B9',size=3)+geom_col(color="brown", fill="dark blue")+coord_flip()+labs(x = "STATE", y = "Total Honey Production (pounds)", title = "TOTAL HONEY PRODUCTION FOR EACH STATE from 1998 to 2012")
+cat("The graph above shows the total honey production for each state, in descending order.") 
+
+Top <- Total_by_state %>% head()
+cat("The TOP honey producing states from 1998 to 2012.")
+Top
+#High <- Total_by_state$state[which.max(Total_by_state$StateProd)]
+cat("The state which produced the most honey from 1998 to 2012 was North Dakota. North Dakota was followed by California, South Dakota, Florida, Montana, and Minnesota.")
+
+Bottom <- Total_by_state %>% tail()
+cat("The BOTTOM honey producing states from 1998 to 2012.")
+Bottom
+#Low <- Total_by_state$state[which.min(Total_by_state$StateProd)]
+cat("The state which produced the least honey from 1998 to 2012 was South Carolina. Other States which produced the least amount of honey over this time period include Oklahama, Maryland, Kentucky, Maine and Virginia.")
+
+
+
+cat("Now, analyzing the correlation of a few variables with time. Correlation has a value from 1 to -1. A positive correlation implies positive growth over time and a negative correlation implies negative growth over time. A correlation value of 0 implies no evident growth.") 
+
+#Correlation in number of colonies with year per state:
+Correlation_colonies <- honeyproduction %>% group_by(state) %>% summarise(Cor=cor(numcol, year)) %>% arrange(desc(Cor))
+ggplot(Correlation_colonies,aes(x=reorder(state,Cor),y=Cor))+geom_point(color='#2980B9',size=3)+geom_col(color="yellow", fill="orange")+labs(x = "STATE", y = "Correlation of number of colonies with year", title = "GROWTH IN NUMBER OF COLONIES BY STATE FROM 1998 to 2012") +theme(axis.text.x = element_text(angle = 90, hjust = 1))
+cat("This graph shows the correlation between the number of colonies and the year, for every state. It is laid out according to increasing correlation. More states show negative growth than positive growth, again pointing to a decline in overall number of honeybee colonies. In particular, Missouri, South Carolina and Maryland show the greatest negative growth. North Dakota, Hawaii, and Montana shows the greatest positive growth.") 
+
+#Correlation in total production with year per state:
+Correlation_prod <- honeyproduction %>% group_by(state) %>% summarise(Cor=cor(totalprod, year)) %>% arrange(desc(Cor))
+ggplot(Correlation_prod,aes(x=reorder(state,Cor),y=Cor))+geom_point(color='#2980B9',size=3)+geom_col(color="brown", fill="dark blue")+labs(x = "STATE", y = "Correlation of total production with year", title = "GROWTH IN TOTAL PRODUCTION BY STATE FROM 1998 to 2012") +theme(axis.text.x = element_text(angle = 90, hjust = 1))
+cat("This graph shows the correlation between the total production and the year, for every state. Total production has mostly decreased in majority of states, with the exception of Hawaii, South Carolina (no increase/decrease) and New Jersey, Kentucky, North Carolina, North Dakota, and Missouri (increase in production).")
+
+#Correlation in production value with year per state:
+Correlation_value <- honeyproduction %>% group_by(state) %>% summarise(Cor=cor(prodvalue, year)) %>% arrange(desc(Cor))
+ggplot(Correlation_value,aes(x=reorder(state,Cor),y=Cor))+geom_point(color='#2980B9',size=3)+geom_col(color="black", fill="lightblue")+labs(x = "STATE", y = "Correlation of production value with year", title = "GROWTH IN PRODUCTION VALUE BY STATE FROM 1998 to 2012") +theme(axis.text.x = element_text(angle = 90, hjust = 1))
+cat("This graph shows the correlation between production value and the year, for every state. Only 6 states, Maryland, Missouri, Oklahoma, Arkansas, Kansas, and Arizona show a decrease in production value over time. Most states have a positive correlation. This implies production value has generally increased, which matches with our previous analysis that total production value has increased over time.")
+
+#Correlation in price/lb with year per state:
+Correlation_price <- honeyproduction %>% group_by(state) %>% summarise(Cor=cor(priceperlb, year)) %>% arrange(desc(Cor))
+ggplot(Correlation_price,aes(x=reorder(state,Cor),y=Cor))+geom_point(color='#2980B9',size=3)+geom_col(color="black", fill="darkgray")+labs(x = "STATE", y = "Correlation of price per lb with year", title = "GROWTH IN PRICE PER LB BY STATE FROM 1998 to 2012") +theme(axis.text.x = element_text(angle = 90, hjust = 1))
+cat("This graph shows the correlation between price/lb and the year, for every state. There is a positive correlation for all states, i.e. price/lb of honey has steadily increased all across the country since 1998.")
+
+
+cat("SUMMARY:\nThe overall honey production across the states has declined since 1998. The production value has inversely increased, with average cost per lb skyrocketing.\nVARIABLES: \nNumber of colonies has gone down in 31 out of 44 States.\nTotal production has gone down in 37 out of 44 states.\nProduction value has gone up in 38 out of 44 states.\nPrice per lb has gone up in ALL states. \n\nTOP 5 Honey Producers(based on total amount of honey produced):\n1. North Dakota\n2. California\n3. South Dakota\n4. Florida\n5. Montana \n\nBOTTOM 5 Honey Producers(based on total amount of honey produced)\n1. South Carolina\n2. Oklahama\n3. Maryland\n4. Kentucky\n5. Maine\n\n There are trends before and after 2006 when there was concern over the Colony Collapse disorder. The number of colonies started to drop before 2006 and then shot up for a short period of time before coming back down again. Average yield per colony also significantly dropped beginning 2005 and has stayed low.\n\n Hence, from the above data, we can see that honey is slowly but surely getting to be a rarer and more costly treat.")
+```
+
+
+
+# Simple linear regression analysis.
+Consider the `cars` dataset built in to R.
+
+## Brief exploration of the data
+Short preliminary analysis of the `cars` data set, including a scatterplot of the data, side-by-side boxplots of the variables, and a description of visual trends evident from both plots.
+
+```{r}
+# The cars dataset consists of 50 observations taken in the 1920s of stopping distances with a given speed, where the speed is the independent x variable and the stopping distance is the dependent y variable. The speed is measured in mph and the distance in feet.
+
+# Scatterplot of the data
+plot(cars, xlab = "Speed", ylab = "Stopping distance") # As evident from this plot, on average, as speed increases, stopping distance also increases, i.e. there is a positive correlation between the two variables.
+
+# Boxplot of the speed and the stopping distance
+boxplot(cars) # For speed, the middle 50% of values lie between 15 to 20 mph. And for stopping distance, the middle 50% of values lie between about 20 to 60 feet. This implies that for a small variation/change in speed, there is a larger variation/change in stopping distance. 
+```
+
+## Correlation and covariance of the speed to the stopping distance
+
+```{r}
+cat("covariance =", cov(cars$speed, cars$dist), "\n") # large value of covariance is hard to interpret, the correlation constant is more useful
+cat("correlation =", cor(cars$speed, cars$dist), "\n") # positive correlation of 0.8 implies stopping distance increases with speed, i.e. there is a relationship between the two variables AND that relationship is positively related (correlation values range from -1 to 1)
+```
+
+## Building the linear model 
+
+```{r}
+# Building linear model
+CarsModel=lm(dist~speed,data=cars)
+
+# Scatterplot
+plot(cars, xlab = "Speed", ylab = "Stopping distance")
+# Regression line
+abline(CarsModel)
+```
+
+
+```{r}
+# install.packages("ggplot2")
+library(ggplot2)
+data("cars")
+```
+
+
+```{r}
+# Generating scatterplot of 'cars' data with 90% confidence interval
+ggplot2::ggplot(cars,aes(x=speed,y=dist))+geom_point(color='#2980B9',size=4)+geom_smooth(method=lm,se=TRUE, color='#2C3E50',level=0.9)
+
+# Building linear model
+CarsModel=lm(dist~speed,data=cars)
+
+# Histogram of residuals
+ggplot2::ggplot(cars,aes(CarsModel$residuals))+geom_histogram(binwidth=5)
+
+# The shaded region becomes larger. This makes sense because a larger area will have a higher chance of containing the "true" regression line versus a smaller area. The confidence interval widens at the extremities to accommodate the standard error in intercept and slope values. 
+
+```
+
+## Summarizing and evaluating the linear regression
+
+```{r}
+summary(CarsModel) # numeric summary of the linear model generated
+cat("SOLUTION:")
+cat("\nMiddle 50% of residuals are between -9.525 and 9.215.")
+cat("\nEquation of the line: y = 3.9324x - 17.5791.")
+cat("\nSince the p-value for speed is very close to 0, there is more substantial evidence that the estimate of 3.9324 is a solid claim, i.e. it has high significance. This is not so for the intercept of -17.5791, where the evidence may be insufficient, i.e. it has low significance.")
+cat("\nThe adjusted R-square value = 0.6438. It measures the \"goodness\" of fit and is between 0 to 1. This means approximately 64% of randomness in the stopping distance is explained or \"removed\" by the variation of the input factor of speed.")
+cat("\nThe residual standard error = 15.38. It measures the standard deviation in the distribution of residuals.")
+```
+
+
+## Analyzing residuals
+
+```{r}
+hist(CarsModel$residuals)
+# The residuals look roughly normally distributed around a mean that is slightly less than 0 (although there are a few residuals that are in a higher range than would be predicted by a normal distribution).
+```
+
+
+```{r}
+# Plotting speed versus residuals
+ggplot2::ggplot(CarsModel,aes(x=speed,y=CarsModel$residuals))+geom_point(color='#2980B9',size=2)+geom_smooth(method=lm,se=TRUE, color='#2C3E50',level=0.9)
+
+# I would say that with what we have, the distribution of residuals look roughly homoscedastic. While there are a few outliers, there is no clear pattern of ballooning of residuals with speed. Perhaps with a larger number of data points, one would be able to make a more confident analysis. 
+```
+
+
+```{r}
+# Examining second plot, the QQ-plot
+plot(CarsModel)
+
+# The QQ-plot gives a roughly straight line. The few exceptions are the residual values of 23, 35, and 49, which are much larger than predicted. This was apparent in the previously generated histogram. The larger residual values are clearly not in line with the normal distribution. 
+```
+
+
+## Making predictions and evaluating the model on a new set of data
+
+New set of data to test the model against:
+
+```{r} 
+testData=data.frame(speed=c(10,15,22,31,44,45,78,82,90),dist=c(12,50,40,90,154,139,286,284,345))
+```
+
+
+Output predicted values with 90% intervals of prediction. These intervals are built using the normal distribution centered on the regression line with standard deviation equal to that of the residuals. So these intervals should contain approximately 9 of 10 predictions.
+
+```{r}
+predictedDist=predict.lm(CarsModel,newdata=testData,interval="prediction",level=0.9)
+predictedDist
+
+# For the most part, the actual values of stopping distance, given by c(12, 50, 40, 90, 154, 139, 286, 284, 345) are contained in the prediction intervals. But with regards to the predicted fit, there is quite a bit of variation, around 10-20 feet. 
+```
+
+
+```{r, eval=TRUE}
+##Plot the x values vs. their predicted values
+values = plot(testData$speed,predictedDist[,1])  #predictedDist[,1] is the `fit' column of the prediction output.
+
+## Add `error bars' based on the 90% prediction interval by using the "arrow" function which draws an arrow from (x0,y0) to (x1,y1)-- y0 and y1 are the lwr and upr bounds of the prediction interval for each x value.
+
+arrows(x0=testData$speed, y0=predictedDist[,2], x1=testData$speed,
+y1=predictedDist[,3], length=0.05, angle=90, code=3)
+
+
+## Add the `actual' stopping distance of the testData in red to see how the predictions match up
+points(testData,col="red") 
+```
+
+
+```{r}
+# Conclusion: the model does reasonably fit the new test data, using the 90% confidence interval. With the exception of one of the data points, all the new data points do lie within the predicted intervals and follow the same linear relationsip. 
+```
+
+
+
+
+
+
+
+
+
