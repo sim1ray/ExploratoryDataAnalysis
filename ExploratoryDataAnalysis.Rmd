@@ -6,13 +6,10 @@ output:
     toc: true
 fontsize: 14pt
 ---
-  <!-- This is just the options for setup. Leave them be.-->
   
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-<!-- This starts the actual text of the document. Feel free to add text/code here. -->
   
 # Exploratory data analysis -- Honey production in the US from 1998-2012
 
