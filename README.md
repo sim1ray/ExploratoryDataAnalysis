@@ -1,4 +1,4 @@
-# ExploratoryDataAnalysis
+# Exploratory Data Analysis
 
 In the first part of this lab, I explore honey production in the US from 1998-2012 while considering the following questions:
 
