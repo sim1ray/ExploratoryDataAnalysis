@@ -254,7 +254,7 @@ points(testData,col="red")
 
 
 ```{r}
-# Conclusion: the model seems to reasonably fit the new test data, using the 90% confidence interval. With the exception of one of the data points, all the new data points do lie within the predicted intervals and follow the same linear relationsip. However it is important to note that just because the points lie within the prediction interval, that does not necesarily mean the model itself is accurate. Since the sample size is small, the prediction intervals are very wide and thus containment in the interval is meaningless for the model's accuracy.
+# Conclusion: the model seems to reasonably fit the new test data, using the 90% confidence interval. With the exception of one of the data points, all the new data points lie within the predicted intervals and follow the same linear relationsip. However it is important to note that just because the points lie within the prediction interval, that does not necesarily mean the model itself is accurate. Since the sample size is small, the prediction intervals are very wide and thus containment in the interval is meaningless for the model's accuracy.
 ```
 
 
